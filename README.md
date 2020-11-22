@@ -76,6 +76,8 @@ Number of responses: 2
 
 I'll probably make this more intuitive later.  
 You can only use !add when not already in a conversation with the Therapy Bot. Writing a message the Therapy Bot doesn't understand will quit your current conversation, going back to the "main menu", where you can call !add.  
-To be honest, nothing is forcing you to use this as a therapist. You can make your own (pretty terrible) chatbot with this, too.
+To be honest, nothing is forcing you to use this as a therapist. You can make your own (pretty terrible) chatbot with this, too.  
+
+I added an example file (therapy.tb) that has some premade responses, it's not too much, it's just to give you a place to start.
 
 <u>**This program, in no way, shape, or form, is meant to be anything other than a joke. Do not use this program instead of getting actual mental help from a professional.**</u>
