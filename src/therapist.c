@@ -133,12 +133,14 @@ int conversation_part(int fd, char * first_input){
         }while(difference != 0 && error_check > 0 && (curr_snippet < num_of_snippets || num_of_snippets == -1));
 
         if(found && difference == 0){
-            printf("%s\n", snippet.therapist_talk);
+            printf("\e[36m\e[1m%s\e[0m\n", snippet.therapist_talk);
             if(NULL != input){
                 free(input);
                 input = NULL;
             }
             if(snippet.following_snippets > 0){
+                possibilities(fd, snippet.following_snippets);
+                
                 error_check = get_raw_input(">> ", &input);
                 if(-1 == error_check){
                     goto cleanup;
@@ -152,7 +154,7 @@ int conversation_part(int fd, char * first_input){
             num_of_snippets = snippet.following_snippets;
         }
         else{
-            puts("I don't know what to say to that");
+            puts("\e[36m\e[1mI don't know what to say to that\e[0m");
             break;
         }
     }
@@ -201,17 +203,17 @@ int new_segment(int fd){
     int i = 0;
     snippet_t snippet = {0};
 
-    error_check = get_raw_input("Original user prompt: ", &user_prompt);
+    error_check = get_raw_input("\e[33m\e[1mUser prompt:\e[0m ", &user_prompt);
     if(-1 == error_check){
         goto cleanup;
     }
 
-    error_check = get_raw_input("Therapist response: ", &therapist_reponse);
+    error_check = get_raw_input("\e[33m\e[1mTherapist response:\e[0m ", &therapist_reponse);
     if(-1 == error_check){
         goto cleanup;
     }
 
-    error_check = get_raw_input("Number of responses: ", &num_of_responses);
+    error_check = get_raw_input("\e[33m\e[1mNumber of responses:\e[0m ", &num_of_responses);
     if(-1 == error_check){
         goto cleanup;
     }
@@ -256,7 +258,7 @@ int therapize(){
     int difference = 0;
     char * input = NULL;
 
-    fd = open("therapy", O_RDWR | O_CREAT, 0666);
+    fd = open("therapy.tb", O_RDWR | O_CREAT, 0666);
     if(-1 == fd){
         perror("THERAPIZE: Open error");
         printf("(Errno: %i)\n", errno);
@@ -264,12 +266,13 @@ int therapize(){
     }
 
     while(true){
+        possibilities(fd, -1);
         error_check = get_raw_input(">> ", &input);
         if(-1 == error_check){
             goto cleanup;
         }
 
-        difference = strncmp("dev mode", input, BUFFER_SIZE);
+        difference = strncmp("!add", input, BUFFER_SIZE);
         if(0 == difference){
             new_segment(fd);
         }
@@ -279,6 +282,60 @@ int therapize(){
     }
 
 
+
+cleanup:
+    return error_check;
+}
+
+int possibilities(int fd, int num_of_subsegments){
+    off_t offset = 0;
+    int error_check = -1;
+    int curr_snippet = 0;
+    snippet_t snippet = {0};
+
+    offset = lseek(fd, 0, SEEK_CUR);
+    if(-1 == offset){
+        perror("POSSIBILITIES: Lseek error");
+        printf("(Errno: %i)\n", errno);
+        goto cleanup;
+    }
+
+    if(-1 == num_of_subsegments){
+        error_check = lseek(fd, 0, SEEK_SET);
+        if(-1 == offset){
+            perror("POSSIBILITIES: Lseek error");
+            printf("(Errno: %i)\n", errno);
+            goto cleanup;
+        }
+    }
+
+    printf("\e[35m\e[1m| ");
+
+    do{
+        error_check = get_next_snippet(fd, &snippet);
+        if(-1 == error_check){
+            goto cleanup;
+        }
+
+        if(0 != error_check){
+            printf("%s | ", snippet.user_input);
+        }
+        
+        if(snippet.following_snippets > 0){
+            pass_over_segment(fd, snippet.following_snippets);
+        }
+
+        curr_snippet++;
+    }while(error_check > 0 && (curr_snippet < num_of_subsegments || num_of_subsegments == -1));
+
+    error_check = lseek(fd, offset, SEEK_SET);
+    if(-1 == offset){
+        perror("POSSIBILITIES: Lseek error");
+        printf("(Errno: %i)\n", errno);
+        goto cleanup;
+    }
+
+    printf("\e[0m\n");
 
 cleanup:
     return error_check;

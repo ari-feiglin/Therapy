@@ -23,3 +23,4 @@ int new_segment(int fd);
 int conversation_part(int fd, char * first_input);
 int lower(char * s1, char ** s2);
 int therapize();
+int possibilities(int fd, int num_of_subsegments);
